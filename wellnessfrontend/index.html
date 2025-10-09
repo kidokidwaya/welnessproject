@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wellness Tracker</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary: #9BC53D;
+            --primary-light: #C5E88A;
+            --primary-dark: #5A8C2F;
+            --secondary: #FDE74C;
+            --accent: #5BC0EB;
+            --light: #F8F9FA;
+            --dark: #343A40;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #E55934;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #e6ffe1);
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .login-container,
+        .app-container {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .navbar {
+            background-color: #fafcf9; /* soft greenish-white */
+
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 0 0 12px 12px;
+        }
+
+        .mood-option {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .mood-option:hover {
+            background-color: var(--primary-light);
+            transform: scale(1.05);
+        }
+
+        input[type="radio"]:checked+.mood-option {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .mood-badge {
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.85rem;
+        }
+
+        .task-item {
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.completed {
+            border-left-color: var(--success);
+            opacity: 0.7;
+        }
+
+        .priority-high {
+            border-left-color: var(--danger);
+        }
+
+        .priority-medium {
+            border-left-color: var(--warning);
+        }
+
+        .wellness-tip {
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .stats-card {
+            text-align: center;
+            padding: 15px;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .mood-color-happy {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .mood-color-motivated {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .mood-color-relaxed {
+            background-color: #9C27B0;
+            color: white;
+        }
+
+        .mood-color-calm {
+            background-color: #673AB7;
+            color: white;
+        }
+
+        .mood-color-tired {
+            background-color: #FF9800;
+            color: white;
+        }
+
+        .mood-color-okay {
+            background-color: #607D8B;
+            color: white;
+        }
+
+        .mood-color-sad {
+            background-color: #795548;
+            color: white;
+        }
+
+        .mood-color-angry {
+            background-color: #F44336;
+            color: white;
+        }
+
+        .mood-color-stressed {
+            background-color: #E91E63;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4" style="color: var(--primary);">Wellness Tracker</h2>
+                <p class="text-center text-muted mb-4">Enter your username to start tracking your wellness journey</p>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required
+                            placeholder="Enter your username">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2">Start Tracking</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden Initially) -->
+    <div id="appScreen" class="app-container d-none">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light mb-4">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="#" style="color: var(--primary);">Wellness Tracker</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-page="dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="tasks">Tasks</a>
+                        </li>
+                    </ul>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">Welcome, <span id="currentUser" class="fw-bold"></span></span>
+                        <button id="logoutBtn" class="btn btn-outline-secondary btn-sm">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="page container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card p-3 mb-4">
+                        <h3 class="mb-3">Mood Summary</h3>
+                        <div class="mb-3">
+                            <label for="moodDateFilter" class="form-label">Filter by Date</label>
+                            <select id="moodDateFilter" class="form-select">
+                                <option value="">All Time</option>
+                                <option value="7days">Last 7 Days</option>
+                                <option value="30days">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <canvas id="moodChart" height="250"></canvas>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-3 stats-card">
+                                <div class="stats-number" id="totalMoods">-</div>
+                                <div class="text-muted">Total Mood Entries</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card p-3 stats-card">
+                                <div class="stats-number" id="tasksCompleted">-</div>
+                                <div class="text-muted">Tasks Completed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card p-3 mb-4">
+                        <h4 class="mb-3">Log Your Mood</h4>
+                        <form id="moodForm">
+                            <div class="mb-3">
+                                <label class="form-label">How are you feeling?</label>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="happy" id="mood-happy"
+                                            style="display: none;">
+                                        <label for="mood-happy" class="mood-option">
+                                            <div style="font-size: 1.5rem;">😄</div>
+                                            <small>Happy</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="motivated" id="mood-motivated"
+                                            style="display: none;">
+                                        <label for="mood-motivated" class="mood-option">
+                                            <div style="font-size: 1.5rem;">💪</div>
+                                            <small>Motivated</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="relaxed" id="mood-relaxed"
+                                            style="display: none;">
+                                        <label for="mood-relaxed" class="mood-option">
+                                            <div style="font-size: 1.5rem;">😌</div>
+                                            <small>Relaxed</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="calm" id="mood-calm"
+                                            style="display: none;">
+                                        <label for="mood-calm" class="mood-option">
+                                            <div style="font-size: 1.5rem;">🧘</div>
+                                            <small>Calm</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="tired" id="mood-tired"
+                                            style="display: none;">
+                                        <label for="mood-tired" class="mood-option">
+                                            <div style="font-size: 1.5rem;">😴</div>
+                                            <small>Tired</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="okay" id="mood-okay"
+                                            style="display: none;">
+                                        <label for="mood-okay" class="mood-option">
+                                            <div style="font-size: 1.5rem;">😐</div>
+                                            <small>Okay</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="sad" id="mood-sad"
+                                            style="display: none;">
+                                        <label for="mood-sad" class="mood-option">
+                                            <div style="font-size: 1.5rem;">😢</div>
+                                            <small>Sad</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="angry" id="mood-angry"
+                                            style="display: none;">
+                                        <label for="mood-angry" class="mood-option">
+                                            <div style="font-size: 1.5rem;">😠</div>
+                                            <small>Angry</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" name="mood" value="stressed" id="mood-stressed"
+                                            style="display: none;">
+                                        <label for="mood-stressed" class="mood-option">
+                                            <div style="font-size: 1.5rem;">😫</div>
+                                            <small>Stressed</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="moodNote" class="form-label">Notes (optional)</label>
+                                <textarea class="form-control" id="moodNote" name="note" rows="3"
+                                    placeholder="How was your day?"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save Mood</button>
+                        </form>
+                    </div>
+
+                    <div class="wellness-tip">
+                        <h5>💡 Wellness Tip</h5>
+                        <p id="wellnessTip">Take a deep breath and appreciate this moment.</p>
+                        <div id="actionableAdvice" class="mt-2"></div>
+                    </div>
+
+                    <div class="card p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">Recent Moods</h4>
+                            <button id="seeAllMoodsBtn" class="btn btn-outline-primary btn-sm">See All Moods</button>
+                        </div>
+                        <div id="recentMoods">
+                            <!-- Recent moods will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Page -->
+        <div id="tasksPage" class="page container d-none">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card p-3 mb-4">
+                        <h3 class="mb-3">Task Completion</h3>
+                        <canvas id="taskChart" height="200"></canvas>
+                    </div>
+
+                    <div class="card p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">Your Tasks</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#taskModal">Add
+                                Task</button>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <select id="moodFilter" class="form-select">
+                                        <option value="">All Mood Tags</option>
+                                        <option value="happy">Happy</option>
+                                        <option value="motivated">Motivated</option>
+                                        <option value="relaxed">Relaxed</option>
+                                        <option value="calm">Calm</option>
+                                        <option value="tired">Tired</option>
+                                        <option value="okay">Okay</option>
+                                        <option value="sad">Sad</option>
+                                        <option value="angry">Angry</option>
+                                        <option value="stressed">Stressed</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select id="completionFilter" class="form-select">
+                                        <option value="">All Tasks</option>
+                                        <option value="true">Completed</option>
+                                        <option value="false">Pending</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tasksList">
+                            <!-- Tasks will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card p-3 mb-4">
+                        <h4 class="mb-3">Task Stats</h4>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Completed:</span>
+                                <span id="completedCount">0</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div id="completedProgress" class="progress-bar bg-success" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Pending:</span>
+                                <span id="pendingCount">0</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div id="pendingProgress" class="progress-bar bg-warning" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-3">
+                        <h4 class="mb-3">Priority Distribution</h4>
+                        <canvas id="priorityChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Moods Page -->
+        <div id="moodsPage" class="page container d-none">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card p-3 mb-4">
+                        <h3 class="mb-3">All Moods</h3>
+                        <div class="mb-3">
+                            <label for="moodsDateFilter" class="form-label">Filter by Date</label>
+                            <select id="moodsDateFilter" class="form-select">
+                                <option value="">All Time</option>
+                                <option value="7days">Last 7 Days</option>
+                                <option value="30days">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="moodsTypeFilter" class="form-label">Filter by Mood</label>
+                            <select id="moodsTypeFilter" class="form-select">
+                                <option value="">All Moods</option>
+                                <option value="happy">Happy</option>
+                                <option value="motivated">Motivated</option>
+                                <option value="relaxed">Relaxed</option>
+                                <option value="calm">Calm</option>
+                                <option value="tired">Tired</option>
+                                <option value="okay">Okay</option>
+                                <option value="sad">Sad</option>
+                                <option value="angry">Angry</option>
+                                <option value="stressed">Stressed</option>
+                            </select>
+                        </div>
+                        <div id="allMoodsList">
+                            <!-- All moods will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal fade" id="taskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="taskForm">
+                        <input type="hidden" id="taskId">
+                        <div class="mb-3">
+                            <label for="taskTitle" class="form-label">Task</label>
+                            <input type="text" class="form-control" id="taskTitle" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="taskPriority" class="form-label">Priority</label>
+                                    <select class="form-select" id="taskPriority" required>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="taskMoodTag" class="form-label">Mood Tag</label>
+                                    <select class="form-select" id="taskMoodTag" required>
+                                        <option value="happy">Happy</option>
+                                        <option value="motivated">Motivated</option>
+                                        <option value="relaxed">Relaxed</option>
+                                        <option value="calm">Calm</option>
+                                        <option value="tired">Tired</option>
+                                        <option value="okay">Okay</option>
+                                        <option value="sad">Sad</option>
+                                        <option value="angry">Angry</option>
+                                        <option value="stressed">Stressed</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="taskTimer" class="form-label">Timer (minutes)</label>
+                                    <input type="number" class="form-control" id="taskTimer" min="0"
+                                        placeholder="Enter timer duration in minutes">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTaskBtn">Save Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000/api';
+
+        // Global state
+        let currentUser = null;
+        let moodChart = null;
+        let taskChart = null;
+        let priorityChart = null;
+        let moodDateFilter = ''; // For mood date filter
+        const timerIntervals = {}; // For task timers
+
+        // Timer persistence in localStorage
+        function saveTimerState(taskId, remaining) {
+            const timers = JSON.parse(localStorage.getItem('taskTimers') || '{}');
+            timers[taskId] = { remaining, savedAt: Math.floor(Date.now() / 1000) };
+            localStorage.setItem('taskTimers', JSON.stringify(timers));
+        }
+
+        function loadTimerState(taskId) {
+            const timers = JSON.parse(localStorage.getItem('taskTimers') || '{}');
+            return timers[taskId] || null;
+        }
+
+        function removeTimerState(taskId) {
+            const timers = JSON.parse(localStorage.getItem('taskTimers') || '{}');
+            delete timers[taskId];
+            localStorage.setItem('taskTimers', JSON.stringify(timers));
+        }
+
+        function clearAllTimerStates() {
+            localStorage.removeItem('taskTimers');
+        }
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const appScreen = document.getElementById('appScreen');
+        const loginForm = document.getElementById('loginForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentUserSpan = document.getElementById('currentUser');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const tasksPage = document.getElementById('tasksPage');
+        const moodForm = document.getElementById('moodForm');
+        const recentMoodsContainer = document.getElementById('recentMoods');
+        const wellnessTipElement = document.getElementById('wellnessTip');
+        const actionableAdviceElement = document.getElementById('actionableAdvice');
+        const tasksList = document.getElementById('tasksList');
+        const taskForm = document.getElementById('taskForm');
+        const saveTaskBtn = document.getElementById('saveTaskBtn');
+        const moodFilter = document.getElementById('moodFilter');
+        const completionFilter = document.getElementById('completionFilter');
+        const completedCountEl = document.getElementById('completedCount');
+        const pendingCountEl = document.getElementById('pendingCount');
+        const completedProgress = document.getElementById('completedProgress');
+        const pendingProgress = document.getElementById('pendingProgress');
+        const totalMoodsElement = document.getElementById('totalMoods');
+        const tasksCompletedElement = document.getElementById('tasksCompleted');
+        const saveMoodBtn = document.querySelector('#moodForm button[type="submit"]');
+
+        // Mood display mapping
+        const moodDisplay = {
+            happy: { emoji: '😄', text: 'Happy', color: 'mood-color-happy' },
+            motivated: { emoji: '💪', text: 'Motivated', color: 'mood-color-motivated' },
+            relaxed: { emoji: '😌', text: 'Relaxed', color: 'mood-color-relaxed' },
+            calm: { emoji: '🧘', text: 'Calm', color: 'mood-color-calm' },
+            tired: { emoji: '😴', text: 'Tired', color: 'mood-color-tired' },
+            okay: { emoji: '😐', text: 'Okay', color: 'mood-color-okay' },
+            sad: { emoji: '😢', text: 'Sad', color: 'mood-color-sad' },
+            angry: { emoji: '😠', text: 'Angry', color: 'mood-color-angry' },
+            stressed: { emoji: '😫', text: 'Stressed', color: 'mood-color-stressed' }
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('wellnessUser');
+            if (savedUser) loginUser(savedUser);
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            loginForm.addEventListener('submit', e => {
+                e.preventDefault();
+                const username = document.getElementById('username').value.trim();
+                if (username) loginUser(username);
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('wellnessUser');
+                currentUser = null;
+                // Clear all timer intervals on logout
+                for (let id in timerIntervals) {
+                    clearInterval(timerIntervals[id]);
+                    delete timerIntervals[id];
+                }
+                clearAllTimerStates();
+                appScreen.classList.add('d-none');
+                loginScreen.classList.remove('d-none');
+            });
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', e => {
+                    e.preventDefault();
+                    const page = link.dataset.page;
+                    showPage(page);
+                    document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+                    link.classList.add('active');
+                });
+            });
+
+            moodForm.addEventListener('submit', e => { e.preventDefault(); logMood(); });
+            const moodDateFilterEl = document.getElementById('moodDateFilter');
+            moodDateFilterEl.addEventListener('change', () => { moodDateFilter = moodDateFilterEl.value; loadDashboardData(); });
+            moodFilter.addEventListener('change', loadTasks);
+            completionFilter.addEventListener('change', loadTasks);
+            saveTaskBtn.addEventListener('click', saveTask);
+            document.getElementById('seeAllMoodsBtn').addEventListener('click', () => showPage('moods'));
+            document.getElementById('moodsDateFilter').addEventListener('change', loadAllMoods);
+            document.getElementById('moodsTypeFilter').addEventListener('change', loadAllMoods);
+        }
+
+        function loginUser(username) {
+            currentUser = username;
+            currentUserSpan.textContent = username;
+            localStorage.setItem('wellnessUser', username);
+            loginScreen.classList.add('d-none');
+            appScreen.classList.remove('d-none');
+            showPage('dashboard');
+
+            // Request notification permission for timer notifications
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            loadDashboardData();
+            loadTasks();
+            loadWellnessTip();
+        }
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('d-none'));
+            document.getElementById(`${page}Page`).classList.remove('d-none');
+            if (page === 'dashboard') loadDashboardData();
+            else if (page === 'tasks') {
+                // Clear all timer intervals when navigating to tasks page
+                for (let id in timerIntervals) {
+                    clearInterval(timerIntervals[id]);
+                    delete timerIntervals[id];
+                }
+                loadTasks();
+            } else if (page === 'moods') loadAllMoods();
+        }
+
+        function loadWellnessTip() {
+            const tips = [
+                "Take a deep breath and appreciate this moment.",
+                "Remember to stay hydrated.",
+                "Take short breaks to stretch during work.",
+                "Practice gratitude daily.",
+                "Get outside and enjoy some fresh air."
+            ];
+            wellnessTipElement.textContent = tips[Math.floor(Math.random() * tips.length)];
+            actionableAdviceElement.innerHTML = '';
+        }
+
+        async function loadDashboardData() {
+            try {
+                const moodData = await (await fetch(`${API_BASE}/moods?user_name=${currentUser}&filter=${moodDateFilter}`)).json();
+                const taskData = await (await fetch(`${API_BASE}/tasks/summary?user_name=${currentUser}`)).json();
+                updateMoodChart(moodData);
+                updateRecentMoods(moodData);
+                updateTaskStats(taskData);
+            } catch (err) {
+                console.error(err);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        function updateMoodChart(moodData) {
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            if (moodChart) moodChart.destroy();
+
+            const counts = {};
+            Object.keys(moodDisplay).forEach(m => counts[m] = 0);
+            moodData.forEach(m => { if (counts[m.mood] !== undefined) counts[m.mood]++; });
+
+            moodChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(moodDisplay).map(m => moodDisplay[m].text),
+                    datasets: [{ label: 'Mood Frequency', data: Object.values(counts), backgroundColor: ['#4CAF50', '#2196F3', '#9C27B0', '#673AB7', '#FF9800', '#607D8B', '#795548', '#F44336', '#E91E63'] }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+
+            totalMoodsElement.textContent = moodData.length;
+        }
+
+        function updateRecentMoods(moods) {
+            recentMoodsContainer.innerHTML = '';
+            if (!moods || moods.length === 0) return recentMoodsContainer.innerHTML = '<p class="text-muted">No moods logged yet.</p>';
+            moods.slice(0, 5).forEach(m => {
+                const info = moodDisplay[m.mood] || moodDisplay.okay;
+                const div = document.createElement('div');
+                div.className = 'd-flex justify-content-between align-items-center p-2 border-bottom';
+                div.innerHTML = `
+                <div><span class="me-2">${info.emoji}</span><span>${m.note || 'No notes'}</span></div>
+                <div><span class="badge ${info.color}">${info.text}</span>
+                <small class="text-muted ms-2">${formatDate(m.created_at)}</small></div>`;
+                recentMoodsContainer.appendChild(div);
+            });
+        }
+
+        function updateTaskStats(taskData) {
+            if (!taskData || taskData.length === 0) {
+                completedCountEl.textContent = pendingCountEl.textContent = '0';
+                completedProgress.style.width = pendingProgress.style.width = '0%';
+                tasksCompletedElement.textContent = '0';
+                return;
+            }
+
+            let total = 0, completed = 0;
+            taskData.forEach(c => { total += parseInt(c.total); completed += parseInt(c.completed_count); });
+            const pending = total - completed;
+            tasksCompletedElement.textContent = completed;
+            completedCountEl.textContent = completed;
+            pendingCountEl.textContent = pending;
+            completedProgress.style.width = `${total > 0 ? (completed / total) * 100 : 0}%`;
+            pendingProgress.style.width = `${total > 0 ? (pending / total) * 100 : 0}%`;
+        }
+
+        async function logMood() {
+            const selectedMoodInput = document.querySelector('input[name="mood"]:checked');
+            if (!selectedMoodInput) return showError('Please select a mood');
+
+            // Disable button to prevent double tap
+            saveMoodBtn.disabled = true;
+            const originalText = saveMoodBtn.textContent;
+            saveMoodBtn.textContent = 'Saving...';
+
+            try {
+                const response = await fetch(`${API_BASE}/moods`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_name: currentUser,
+                        mood: selectedMoodInput.value,
+                        note: document.getElementById('moodNote').value
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    moodForm.reset();
+                    if (result.actionable_advice?.length) {
+                        actionableAdviceElement.innerHTML = `<strong>Try this:</strong><ul>${result.actionable_advice.map(a => `<li>${a}</li>`).join('')}</ul>`;
+                    }
+                    loadDashboardData();
+                    showSuccess('Mood logged successfully!');
+                } else throw new Error(result.message);
+            } catch (err) {
+                console.error(err);
+                showError('Failed to log mood');
+            } finally {
+                // Re-enable button
+                saveMoodBtn.disabled = false;
+                saveMoodBtn.textContent = originalText;
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                let query = `user_name=${currentUser}`;
+                if (moodFilter.value) query += `&mood_tag=${moodFilter.value}`;
+                if (completionFilter.value) query += `&completed=${completionFilter.value}`;
+
+                const response = await fetch(`${API_BASE}/tasks?${query}`);
+                if (!response.ok) throw new Error('Network response not ok');
+
+                const data = await response.json();
+                const tasksArray = Array.isArray(data) ? data : data.data || [];
+
+                const taskData = await (await fetch(`${API_BASE}/tasks/summary?user_name=${currentUser}`)).json();
+                updateTaskStats(taskData);
+
+                updateTasksList(tasksArray);
+                updateTaskCharts(tasksArray);
+            } catch (err) {
+                console.error(err);
+                showError('Failed to load tasks: ' + err.message);
+            }
+        }
+
+        function updateTasksList(tasks) {
+            // Clear all existing timer intervals before recreating DOM
+            for (let id in timerIntervals) {
+                clearInterval(timerIntervals[id]);
+                delete timerIntervals[id];
+            }
+            tasksList.innerHTML = '';
+            if (!tasks || tasks.length === 0) return tasksList.innerHTML = '<p class="text-muted">No tasks found.</p>';
+
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = 'task-item mb-2 p-2 d-flex justify-content-between align-items-center';
+                if (task.completed) div.classList.add('completed');
+                if (task.priority === 'high') div.classList.add('priority-high');
+                else if (task.priority === 'medium') div.classList.add('priority-medium');
+
+                const timerId = `timer-${task.id}`;
+                div.innerHTML = `
+                <div>
+                    <strong>${task.task}</strong>
+                    <small class="ms-2 badge ${moodDisplay[task.mood_tag]?.color || 'mood-color-okay'}">${task.mood_tag}</small>
+                    ${task.timer_duration ? `<small class="ms-3 text-muted" id="${timerId}">${formatDuration(task.timer_duration)}</small>` : ''}
+                </div>
+                <div>
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}" class="task-complete">
+                    <button class="btn btn-sm btn-outline-danger ms-2 delete-task" data-id="${task.id}">Delete</button>
+                </div>`;
+                tasksList.appendChild(div);
+
+                if (task.timer_duration && !task.completed && !timerIntervals[task.id]) startTimer(task.id, task.timer_duration, task.timer_start);
+            });
+
+            document.querySelectorAll('.task-complete').forEach(cb => {
+                cb.addEventListener('change', async function () {
+                    const taskId = this.dataset.id;
+                    const completed = this.checked;
+                    try {
+                        await fetch(`${API_BASE}/tasks/${taskId}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ completed })
+                        });
+                        if (timerIntervals[taskId]) {
+                            clearInterval(timerIntervals[taskId]);
+                            delete timerIntervals[taskId];
+                        }
+                        removeTimerState(taskId);
+                        loadTasks();
+                    } catch (err) { console.error(err); showError('Failed to update task'); }
+                });
+            });
+
+            document.querySelectorAll('.delete-task').forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    const taskId = this.dataset.id;
+                    const result = await Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'You want to delete this task?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!'
+                    });
+                    if (result.isConfirmed) {
+                        const originalText = this.textContent;
+                        this.disabled = true;
+                        this.textContent = 'Deleting...';
+                        try {
+                            await fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' });
+                            if (timerIntervals[taskId]) {
+                                clearInterval(timerIntervals[taskId]);
+                                delete timerIntervals[taskId];
+                            }
+                            removeTimerState(taskId);
+                            loadTasks();
+                        } catch (err) {
+                            console.error(err);
+                            showError('Failed to delete task');
+                        } finally {
+                            this.disabled = false;
+                            this.textContent = originalText;
+                        }
+                    }
+                });
+            });
+        }
+
+        function formatDuration(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function startTimer(taskId, duration, timerStart) {
+            const timerElement = document.getElementById(`timer-${taskId}`);
+            if (!timerElement) return;
+
+            const now = Math.floor(Date.now() / 1000);
+            let remaining;
+
+            const localState = loadTimerState(taskId);
+            if (localState) {
+                const elapsed = now - localState.savedAt;
+                remaining = localState.remaining - elapsed;
+            } else if (timerStart) {
+                const startTime = new Date(timerStart).getTime() / 1000;
+                remaining = duration - (now - startTime);
+            } else {
+                remaining = duration;
+                saveTimerState(taskId, remaining);
+                // Also set API timer_start
+                fetch(`${API_BASE}/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timer_start: new Date().toISOString() })
+                }).catch(err => console.error('Failed to set timer_start:', err));
+            }
+
+            if (remaining <= 0) {
+                timerElement.textContent = '00:00';
+                removeTimerState(taskId);
+                fetch(`${API_BASE}/tasks/${taskId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: true, timer_start: null }) })
+                    .then(() => { loadTasks(); loadDashboardData(); }).catch(err => console.error('Failed to complete expired timer:', err));
+                return;
+            }
+
+            timerElement.textContent = formatDuration(remaining);
+            if (timerIntervals[taskId]) clearInterval(timerIntervals[taskId]);
+
+            timerIntervals[taskId] = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(timerIntervals[taskId]);
+                    delete timerIntervals[taskId];
+                    timerElement.textContent = '00:00';
+                    removeTimerState(taskId);
+                    notifyTimerEnd(taskId);
+                    try {
+                        const resp = fetch(`${API_BASE}/tasks/${taskId}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ completed: true, timer_start: null })
+                        });
+                        if (resp.ok) { loadTasks(); loadDashboardData(); }
+                    } catch (err) { console.error(err); }
+                } else {
+                    timerElement.textContent = formatDuration(remaining);
+                    saveTimerState(taskId, remaining);
+                }
+            }, 1000);
+        }
+
+        function notifyTimerEnd(taskId) {
+            if (Notification.permission === 'granted') {
+                new Notification('Task Timer Ended', { body: `Timer for task ID ${taskId} has ended.`, icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png' });
+            } else if (Notification.permission === 'default') {
+                Notification.requestPermission().then(p => { if (p === 'granted') notifyTimerEnd(taskId); });
+            }
+            // No notification if permission denied
+        }
+
+        function updateTaskCharts(tasks) {
+            const ctxPriority = document.getElementById('priorityChart').getContext('2d');
+            if (priorityChart) priorityChart.destroy();
+            const counts = { low: 0, medium: 0, high: 0 };
+            tasks.forEach(t => { if (counts[t.priority] !== undefined) counts[t.priority]++; });
+            priorityChart = new Chart(ctxPriority, {
+                type: 'doughnut',
+                data: { labels: ['Low', 'Medium', 'High'], datasets: [{ data: Object.values(counts), backgroundColor: ['#4CAF50', '#FFC107', '#E55934'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            const ctxTask = document.getElementById('taskChart').getContext('2d');
+            if (taskChart) taskChart.destroy();
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = tasks.length - completed;
+            taskChart = new Chart(ctxTask, {
+                type: 'pie',
+                data: { labels: ['Completed', 'Pending'], datasets: [{ data: [completed, pending], backgroundColor: ['#4CAF50', '#FFC107'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function formatDate(dateString) {
+            const d = new Date(dateString);
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function showError(msg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: msg,
+            });
+        }
+        function showSuccess(msg) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: msg,
+            });
+        }
+
+        async function saveTask() {
+            const taskId = document.getElementById('taskId').value;
+            const title = document.getElementById('taskTitle').value.trim();
+            const priority = document.getElementById('taskPriority').value;
+            const moodTag = document.getElementById('taskMoodTag').value;
+            const timerMinutes = document.getElementById('taskTimer').value;
+
+            if (!title) { Swal.fire('Please enter a task title.'); return; }
+
+            // Disable button to prevent double tap
+            saveTaskBtn.disabled = true;
+            const originalText = saveTaskBtn.textContent;
+            saveTaskBtn.textContent = 'Saving...';
+
+            const payload = {
+                user_name: currentUser,
+                task: title,
+                priority,
+                mood_tag: moodTag,
+                completed: false,
+                timer_duration: timerMinutes ? parseInt(timerMinutes) * 60 : null,
+                timer_start: null
+            };
+
+            try {
+                let url = `${API_BASE}/tasks`, method = 'POST';
+                if (taskId) { url = `${API_BASE}/tasks/${taskId}`; method = 'PUT'; }
+
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { const errData = await response.json(); throw new Error(errData.message || 'Failed to save task'); }
+
+                taskForm.reset();
+                document.getElementById('taskId').value = '';
+                const modalEl = document.getElementById('taskModal');
+                const modal = bootstrap.Modal.getInstance(modalEl); modal.hide();
+                loadTasks();
+                showSuccess('Task saved successfully!');
+            } catch (err) { console.error(err); showError('Error saving task: ' + err.message); }
+            finally {
+                // Re-enable button
+                saveTaskBtn.disabled = false;
+                saveTaskBtn.textContent = originalText;
+            }
+        }
+
+        async function loadAllMoods() {
+            try {
+                let query = `user_name=${currentUser}`;
+                const dateFilter = document.getElementById('moodsDateFilter').value;
+                const typeFilter = document.getElementById('moodsTypeFilter').value;
+                if (dateFilter) query += `&filter=${dateFilter}`;
+                if (typeFilter) query += `&mood=${typeFilter}`;
+
+                const response = await fetch(`${API_BASE}/moods?${query}`);
+                if (!response.ok) throw new Error('Network response not ok');
+
+                const data = await response.json();
+                const moodsArray = Array.isArray(data) ? data : data.data || [];
+                updateAllMoodsList(moodsArray);
+            } catch (err) {
+                console.error(err);
+                showError('Failed to load moods: ' + err.message);
+            }
+        }
+
+        function updateAllMoodsList(moods) {
+            const container = document.getElementById('allMoodsList');
+            container.innerHTML = '';
+            if (!moods || moods.length === 0) return container.innerHTML = '<p class="text-muted">No moods found.</p>';
+            moods.forEach(m => {
+                const info = moodDisplay[m.mood] || moodDisplay.okay;
+                const div = document.createElement('div');
+                div.className = 'd-flex justify-content-between align-items-center p-2 border-bottom';
+                div.innerHTML = `
+                <div><span class="me-2">${info.emoji}</span><span>${m.note || 'No notes'}</span></div>
+                <div><span class="badge ${info.color}">${info.text}</span>
+                <small class="text-muted ms-2">${formatDate(m.created_at)}</small></div>`;
+                container.appendChild(div);
+            });
+        }
+    </script>
+
+
+
+</body>
+
+</html>
